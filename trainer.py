@@ -1,6 +1,32 @@
 import os
-from reverend.thomas import Bayes
-trainer = Bayes()
+from random import randint
+#from reverend.thomas import Bayes
+#trainer = Bayes()
+
+probs = {}
+def _train(inp, outp):
+    global probs
+    if inp not in probs.keys():
+        probs[inp] = {}
+        probs[inp][outp] = 1
+        return
+    elif outp not in probs[inp].keys():
+        probs[inp][outp] = 1
+        return
+    probs[inp][outp] += 1
+
+def _guess(inp):
+    global probs
+    total = 0
+    for key in probs[inp].keys():
+        total += probs[inp][key]
+    choice = randint(0,total)
+    for key in probs[inp].keys():
+        if choice - probs[inp][key] <= 0:
+            return key
+        choice = choice - probs[inp][key]
+
+
 def get_next_lowest_block_ind(y,x,mparr):
     column = ""
     for horiz in mparr:
@@ -25,8 +51,9 @@ def is_jumping(mario):
     return False
 
 def train(parsed_ticks): # mario, nextblock, currblock, nbindex):
-    global trainer
+    #global trainer
     prev_xpos = 0
+    prev_ypos = 0
     inp = ""
     keys = ["left", "right", "down", "jumping", "speed"]
     for key in keys:
@@ -36,9 +63,11 @@ def train(parsed_ticks): # mario, nextblock, currblock, nbindex):
             continue
         
         if mario["xpos"] != prev_xpos:
-            mario_offset = mario["xpos"] - prev_xpos
-            trainer.train(mario["curr"]+":"+str(mario_offset)+":"+str(mario["ypos"]), inp)
+            mario_offset = mario["ypos"] - prev_ypos
+            #trainer.
+            _train(inp, mario["curr"]+":"+str(mario_offset))
             prev_xpos = mario["xpos"]
+            prev_ypos = mario["ypos"]
             inp = ""
         else:
             continue
@@ -76,7 +105,7 @@ for fn in os.listdir("./"):
             mario["jumping"] = int(is_jumping(mario))
             parsed_ticks.append(mario)
     train(parsed_ticks)
-trainer.save("classifier")
+#trainer.save("classifier")
 
 f = open("astar_01.tsv","r")
 sample = f.read().split("\n")
@@ -84,15 +113,39 @@ inp = []
 for line in sample:
     if line != "":
         inp.append(line.split("\t")[1])
-currx = 0
-curry = 0
-print trainer.guess("01001")
+
+curry = 1
+seed = "-----------#"
+columns = [[seed, curry]]
+mn = 1
+mx = 1
 for keym in inp[1:]:
-    print keym
-    guess = trainer.guess(keym)
-    print guess
+    guess = _guess(keym)
     guess = guess.split(":")
-    print guess[0]
+    curry += int(guess[1])
+    if curry > mx:
+        mx = curry
+    if curry < mn:
+        mn = curry
+    columns.append([guess[0], curry])
+colheight = len(columns[0][0])
+mx += colheight
+height = mx - mn
+maparr = ["" for i in range(height)]
+currx = 0
+for column in columns:
+    offset = column[1] + (mn*-1)
+    ptr = offset+colheight-1
+    #print "height: ", height
+    #print "ptr: ", ptr
+    for ind, char in enumerate(column[0][::-1]):
+        maparr[ptr-ind] += char
+    currx += 1
+    for ind, line in enumerate(maparr):
+        if len(line) != currx:
+            maparr[ind] += "#"
 
-
+with open("genmap","w+") as f:
+    for row in maparr:
+        f.write(row + "\n")
 
