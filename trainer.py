@@ -65,7 +65,7 @@ def train(parsed_ticks): # mario, nextblock, currblock, nbindex):
         if mario["xpos"] != prev_xpos:
             mario_offset = mario["ypos"] - prev_ypos
             #trainer.
-            _train(inp, mario["curr"]+":"+str(mario_offset))
+            _train(inp, mario["curr"]+":"+str(mario_offset)+":"+str(mario["ypos"]))
             prev_xpos = mario["xpos"]
             prev_ypos = mario["ypos"]
             inp = ""
@@ -114,23 +114,38 @@ for line in sample:
     if line != "":
         inp.append(line.split("\t")[1])
 
-curry = 1
+curry = 10
 seed = "-----------#"
-columns = [[seed, curry]]
-mn = 1
-mx = 1
-for keym in inp[1:]:
+columns = [[seed, 0]]
+mn = 0
+mx = 0
+tmpctr = 0
+curryoff = 10
+globalshift = 0
+for keym in inp[15:]:
     guess = _guess(keym)
     guess = guess.split(":")
-    curry += int(guess[1])
-    if curry > mx:
-        mx = curry
-    if curry < mn:
-        mn = curry
-    columns.append([guess[0], curry])
+    shift = curry - int(guess[2]) - int(guess[1])
+    globalshift += shift
+    columns.append([guess[0], globalshift])
+    curry = int(guess[2])
+    if globalshift > mx:
+        mx = globalshift
+    if globalshift < mn:
+        mn = globalshift
+    if tmpctr < 10:
+        print "shift: ", shift
+        print "globalshift: ", globalshift
+        print "guess[2]: ", guess[2]
+        print "guess[1]: ", guess[1]
+        print guess[0]
+        print "======="
+        tmpctr += 1
 colheight = len(columns[0][0])
 mx += colheight
-height = mx - mn
+height = (mx) - (mn)
+height = height
+print "mapheight: ", height
 maparr = ["" for i in range(height)]
 currx = 0
 for column in columns:
