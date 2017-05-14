@@ -141,8 +141,23 @@ for column in columns:
     for ind, char in enumerate(column[0][::-1]):
         maparr[ptr-ind] += char
     currx += 1
+    pit = False
+    hitgen = False
+    lastchar = ""
     for ind, line in enumerate(maparr):
-        if len(line) != currx:
+        if ind == 0:
+            hitgen = False
+            pit = False
+            lastchar = ""
+        if len(line) == currx:
+            hitgen = True
+            lastchar = line[-1]
+            continue
+        if lastchar == "-":
+            pit = True
+        if pit or not hitgen:
+            maparr[ind] += "-"
+        else:
             maparr[ind] += "#"
 
 with open("genmap","w+") as f:
