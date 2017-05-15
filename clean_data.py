@@ -1,6 +1,6 @@
 import os
-for filename in os.listdir('./data_set'):
-    with open('./data_set/' + filename, 'r') as r:
+for filename in os.listdir('./human_data'):
+    with open('./human_data/' + filename, 'r') as r:
         lines = r.readlines()
 
     second_start_tick = None
